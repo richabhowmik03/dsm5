@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saksham — DSM-5 Assessment View</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --border: #e8e4dc;
+  --border2: #d4cfc6;
+  --text: #1c1917;
+  --muted: #78716c;
+  --dim: #a8a29e;
+
+  --asd: #7c3aed;   --asd-light: #f5f3ff; --asd-mid: #ddd6fe;
+  --adhd: #dc6b19;  --adhd-light: #fff7ed; --adhd-mid: #fed7aa;
+  --anx: #0891b2;   --anx-light: #ecfeff; --anx-mid: #a5f3fc;
+  --id: #059669;    --id-light: #ecfdf5;  --id-mid: #a7f3d0;
+  --gdd: #ca8a04;   --gdd-light: #fefce8; --gdd-mid: #fde68a;
+  --mot: #be185d;   --mot-light: #fdf2f8; --mot-mid: #fbcfe8;
+  --com: #1d4ed8;   --com-light: #eff6ff; --com-mid: #bfdbfe;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+/* HEADER */
+header {
+  background: var(--text); color: white;
+  padding: 50px 60px 42px; position: relative; overflow: hidden;
+}
+header::before {
+  content: 'DSM-5'; position: absolute; right: 30px; top: 0;
+  font-family: 'Playfair Display', serif; font-size: 200px;
+  color: rgba(255,255,255,0.04); line-height: 1; pointer-events: none;
+}
+.h-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 4px; color: #a8a29e; text-transform: uppercase; margin-bottom: 14px;
+}
+header h1 {
+  font-family: 'Playfair Display', serif; font-size: 40px;
+  font-weight: 700; line-height: 1.15; margin-bottom: 12px;
+}
+header h1 em { color: #fbbf24; font-style: italic; }
+header p { color: #a8a29e; font-size: 14px; max-width: 680px; line-height: 1.7; }
+
+/* CATEGORY NAV */
+.cat-nav {
+  display: flex; gap: 0; overflow-x: auto;
+  border-bottom: 2px solid var(--border);
+  background: var(--surface); position: sticky; top: 0; z-index: 100;
+}
+.cat-tab {
+  padding: 14px 22px; cursor: pointer; white-space: nowrap;
+  font-size: 12.5px; font-weight: 600; border-bottom: 3px solid transparent;
+  transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  margin-bottom: -2px; color: var(--muted);
+}
+.cat-tab:hover { background: var(--bg); }
+.cat-tab.active { border-bottom-color: currentColor; }
+.cat-tab .count {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 2px 7px; border-radius: 10px; font-weight: 500;
+}
+
+/* STATS STRIP */
+.stats-strip {
+  display: grid; grid-template-columns: repeat(7,1fr);
+  border-bottom: 1px solid var(--border); background: var(--surface);
+}
+.stat {
+  padding: 16px 20px; border-right: 1px solid var(--border); text-align: center;
+}
+.stat-n { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1; }
+.stat-l { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+  color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+
+/* MAIN */
+.main { display: flex; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 300px; flex-shrink: 0; background: var(--surface);
+  border-right: 1px solid var(--border); height: calc(100vh - 200px);
+  overflow-y: auto; position: sticky; top: 50px;
+}
+.sb-section { border-bottom: 1px solid var(--border); }
+.sb-section-hdr {
+  padding: 14px 20px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+}
+.sb-criterion {
+  padding: 9px 20px 9px 36px; font-size: 12px; color: var(--muted);
+  cursor: pointer; display: flex; justify-content: space-between;
+  align-items: center; transition: background 0.12s; border-left: 3px solid transparent;
+}
+.sb-criterion:hover { background: var(--bg); }
+.sb-criterion.active { color: var(--text); font-weight: 600; background: var(--bg); }
+.sb-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); }
+
+/* CONTENT */
+.content { flex: 1; padding: 32px 40px; overflow-y: auto; }
+
+.category-header {
+  display: flex; align-items: flex-start; gap: 20px; margin-bottom: 28px;
+  padding: 24px 28px; border-radius: 12px; border: 1px solid;
+}
+.cat-icon { font-size: 32px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.cat-meta {}
+.dsm-code {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.cat-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+.cat-desc { font-size: 13px; color: var(--muted); line-height: 1.7; max-width: 680px; }
+.cat-stats { display: flex; gap: 20px; margin-top: 14px; flex-wrap: wrap; }
+.cstat { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+.cstat strong { font-size: 16px; font-weight: 700; margin-right: 4px; }
+
+/* SUBCATEGORY */
+.subcategory { margin-bottom: 32px; }
+.sub-hdr {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+.sub-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.sub-title { font-size: 15px; font-weight: 700; }
+.sub-criterion {
+  font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted);
+  margin-left: auto; padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border);
+}
+
+/* QUESTION CARDS */
+.q-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 10px; }
+.q-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.q-card:hover { border-color: var(--border2); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.q-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.q-id { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); }
+.q-screen { font-family: 'DM Mono', monospace; font-size: 9px; padding: 2px 7px;
+  border-radius: 3px; background: #fef3c7; color: #92400e; letter-spacing: 1px; }
+.q-domain { font-family: 'DM Mono', monospace; font-size: 9px; padding: 2px 7px;
+  border-radius: 3px; letter-spacing: 1px; }
+.q-text { font-size: 13px; line-height: 1.55; color: var(--text); }
+.q-assess { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim); margin-top: 8px; }
+
+/* SEARCH */
+.search-bar {
+  display: flex; gap: 12px; align-items: center; margin-bottom: 24px;
+}
+.search-input {
+  flex: 1; padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px;
+  background: var(--surface); color: var(--text); outline: none;
+}
+.search-input:focus { border-color: #6b7280; }
+.q-count-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+/* FILTER PILLS */
+.filter-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.fpill {
+  padding: 5px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
+  border: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
+  color: var(--muted); background: var(--surface);
+}
+.fpill.on { background: var(--text); color: white; border-color: var(--text); }
+.fpill:hover:not(.on) { background: var(--bg); }
+
+/* EMPTY */
+.empty { padding: 60px 0; text-align: center; color: var(--dim); }
+.empty p { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+
+footer {
+  padding: 20px 60px; border-top: 1px solid var(--border);
+  font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dim);
+  display: flex; justify-content: space-between;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-eyebrow">● Saksham Tech — Reorganised by DSM-5 Classification</div>
+  <h1>Assessment Bank<br><em>DSM-5 Criteria View</em></h1>
+  <p>1,062 assessment questions remapped from 6 developmental domains to 7 DSM-5 diagnostic categories. Each question is tagged with its DSM-5 category, subcategory, and specific criterion.</p>
+</header>
+
+<div class="cat-nav" id="catNav"></div>
+
+<div class="stats-strip" id="statsStrip"></div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="content" id="content">
+    <div class="search-bar">
+      <input class="search-input" id="searchInput" type="text" placeholder="Search questions, item IDs, or criteria…">
+      <span class="q-count-label" id="countLabel"></span>
+    </div>
+    <div class="filter-row" id="filterRow"></div>
+    <div id="questionArea"></div>
+  </div>
+</div>
+
+<footer>
+  <span>DSM-5 mapping: ASD (127) · ADHD (67) · Anxiety (43) · Intellectual Disability (297) · GDD (289) · Motor (140) · Communication (99)</span>
+  <span>Total: 1,062 items mapped</span>
+</footer>
+
+<script>
+const CATEGORIES = [
+  {
+    key: 'ASD',
+    label: 'ASD',
+    full: 'ASD — Autism Spectrum Disorder',
+    icon: '🧩',
+    color: '#7c3aed',
+    light: '#f5f3ff',
+    mid: '#ddd6fe',
+    code: 'DSM-5 · 299.00 (F84.0)',
+    count: 127,
+    desc: 'Persistent deficits in social communication and social interaction across multiple contexts, plus restricted, repetitive patterns of behavior, interests, or activities. Tools: M-CHAT-R, ISAA (ISA Tool), INDT-ASD.',
+    subcategories: [
+      { name: 'Criterion A — Social Communication Deficits', criteria: ['A1: Social-emotional reciprocity', 'A2: Nonverbal communication', 'A3: Developing & maintaining relationships'] },
+      { name: 'Criterion B — Restricted & Repetitive Behaviors', criteria: ['B1: Stereotyped/repetitive movements or speech', 'B2: Insistence on sameness / routines', 'B3: Highly fixated interests', 'B4: Hyper/hypo reactivity to sensory input'] },
+    ]
+  },
+  {
+    key: 'ADHD',
+    label: 'ADHD',
+    full: 'ADHD — Attention Deficit Hyperactivity Disorder',
+    icon: '⚡',
+    color: '#dc6b19',
+    light: '#fff7ed',
+    mid: '#fed7aa',
+    code: 'DSM-5 · 314.01 (F90.2)',
+    count: 67,
+    desc: 'Persistent pattern of inattention and/or hyperactivity-impulsivity that interferes with functioning or development. Tool: ADHD Rating Scale.',
+    subcategories: [
+      { name: 'Criterion A1 — Inattention', criteria: ['A1: Inattention symptoms'] },
+      { name: 'Criterion A2 — Hyperactivity/Impulsivity', criteria: ['A2: Hyperactivity-impulsivity symptoms', 'A2: Oppositional/conduct symptoms'] },
+    ]
+  },
+  {
+    key: 'ANX',
+    label: 'Anxiety',
+    full: 'Anxiety Disorders',
+    icon: '😰',
+    color: '#0891b2',
+    light: '#ecfeff',
+    mid: '#a5f3fc',
+    code: 'DSM-5 · F41.x / F40.x / F93.0',
+    count: 43,
+    desc: 'Excessive fear and anxiety with related behavioral disturbances. Includes GAD, Separation Anxiety, Social Anxiety, and Panic Disorder. Tool: SCARED.',
+    subcategories: [
+      { name: 'Generalized Anxiety Disorder (GAD)', criteria: ['Anxiety symptoms', 'Excessive worry symptoms'] },
+      { name: 'Separation Anxiety Disorder', criteria: ['Distress on separation'] },
+      { name: 'Social Anxiety Disorder', criteria: ['Fear of negative evaluation'] },
+      { name: 'Panic Disorder', criteria: ['Panic attack symptoms'] },
+      { name: 'School Avoidance / Separation Anxiety', criteria: ['School refusal / somatic complaints'] },
+    ]
+  },
+  {
+    key: 'ID',
+    label: 'Intellectual Disability',
+    full: 'Intellectual Disability',
+    icon: '🧠',
+    color: '#059669',
+    light: '#ecfdf5',
+    mid: '#a7f3d0',
+    code: 'DSM-5 · 319 (F79)',
+    count: 297,
+    desc: 'Deficits in general mental abilities and adaptive functioning across conceptual, social, and practical domains. Tools: BKT, Jamaican Portage (Cognitive & Self-Help).',
+    subcategories: [
+      { name: 'Adaptive Functioning Deficits', criteria: ['Conceptual domain (reasoning, memory, problem solving)', 'Social domain (empathy, communication, relationships)', 'Practical domain (self-care, daily living, work skills)', 'Conceptual domain (reasoning, learning, problem solving)'] },
+    ]
+  },
+  {
+    key: 'GDD',
+    label: 'Global Dev. Delay',
+    full: 'Global Developmental Delay',
+    icon: '📈',
+    color: '#ca8a04',
+    light: '#fefce8',
+    mid: '#fde68a',
+    code: 'DSM-5 · 315.8 (F88)',
+    count: 289,
+    desc: 'Failure to meet expected developmental milestones in multiple areas of intellectual functioning. Applied to children under 5. Tools: DST, Jamaican Portage (Social & Infant Stim).',
+    subcategories: [
+      { name: 'Early Developmental Milestones (0–12 months)', criteria: ['General developmental milestone', 'Communication milestone delay', 'Motor milestone delay', 'Cognitive milestone delay', 'Social milestone delay'] },
+      { name: 'Toddler Milestones (1–2 years)', criteria: ['Communication milestone delay', 'Motor milestone delay', 'Cognitive milestone delay', 'Social milestone delay', 'General developmental milestone'] },
+      { name: 'Preschool Milestones (3–5 years)', criteria: ['Communication milestone delay', 'Motor milestone delay', 'Cognitive milestone delay', 'Social milestone delay'] },
+      { name: 'School-Age Milestones (6+ years)', criteria: ['Communication milestone delay', 'Motor milestone delay', 'Cognitive milestone delay', 'Social milestone delay'] },
+      { name: 'Social-Emotional Development', criteria: ['Social milestone delay'] },
+    ]
+  },
+  {
+    key: 'MOT',
+    label: 'Motor Disorders',
+    full: 'Motor Disorders — Developmental Coordination Disorder',
+    icon: '🏃',
+    color: '#be185d',
+    light: '#fdf2f8',
+    mid: '#fbcfe8',
+    code: 'DSM-5 · 315.4 (F82)',
+    count: 140,
+    desc: 'Motor skills substantially below chronological age. Manifests as clumsiness, slowness, or inaccuracy of motor skills. Tool: Jamaican Portage (Motor domain).',
+    subcategories: [
+      { name: 'Early Motor Development (0–2 years)', criteria: ['Motor coordination below expected level'] },
+      { name: 'Motor Skill Acquisition (2+ years)', criteria: ['Motor coordination below expected level'] },
+      { name: 'Gross & Fine Motor Skills (Adolescent)', criteria: ['Motor coordination below expected level'] },
+    ]
+  },
+  {
+    key: 'COM',
+    label: 'Communication',
+    full: 'Communication Disorders',
+    icon: '🗣️',
+    color: '#1d4ed8',
+    light: '#eff6ff',
+    mid: '#bfdbfe',
+    code: 'DSM-5 · 315.32 (F80.x)',
+    count: 99,
+    desc: 'Persistent difficulties in acquisition and use of language across modalities. Includes Language Disorder, Speech Sound Disorder, and Receptive Language deficits. Tool: Jamaican Portage (Language domain).',
+    subcategories: [
+      { name: 'Language Disorder — Expressive', criteria: ['Reduced vocabulary / sentence structure', 'Persistent difficulty with speech production'] },
+      { name: 'Language Disorder — Receptive', criteria: ['Reduced ability to understand language'] },
+      { name: 'Speech Sound Disorder', criteria: ['Persistent difficulty with speech production'] },
+    ]
+  },
+];
+
+// Raw data — injected from Python output
+const RAW_DATA = null; // Will be populated inline below
+
+// Inline data (abbreviated — full dataset via fetch simulation)
+const QUESTIONS_BY_CAT = {
+  'ASD — Autism Spectrum Disorder': [
+    {item_id:'MCHAT-Q1', assessment:'M-CHAT-R', domain:'Cognitive', question:'If you point at something across the room, does your child look at it?', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A1: Social-emotional reciprocity', screening:true},
+    {item_id:'MCHAT-Q3', assessment:'M-CHAT-R', domain:'Cognitive', question:'Does your child play pretend or make-believe?', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A1: Social-emotional reciprocity', screening:true},
+    {item_id:'MCHAT-Q5', assessment:'M-CHAT-R', domain:'Motor', question:'Does your child make unusual finger movements near his/her eyes?', dsm5_subcategory:'Criterion B — Restricted & Repetitive Behaviors', dsm5_criterion:'B1: Stereotyped/repetitive movements or speech', screening:true},
+    {item_id:'MCHAT-Q6', assessment:'M-CHAT-R', domain:'Language', question:'Does your child point with one finger to ask for something or to get help?', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A2: Nonverbal communication', screening:true},
+    {item_id:'MCHAT-Q7', assessment:'M-CHAT-R', domain:'Language', question:'Does your child point with one finger to show you something interesting?', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A2: Nonverbal communication', screening:true},
+    {item_id:'MCHAT-Q10', assessment:'M-CHAT-R', domain:'Language', question:'Does your child respond to his/her name when you call?', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A1: Social-emotional reciprocity', screening:true},
+    {item_id:'MCHAT-Q12', assessment:'M-CHAT-R', domain:'Social', question:'Does your child get upset by everyday noises?', dsm5_subcategory:'Criterion B — Restricted & Repetitive Behaviors', dsm5_criterion:'B4: Hyper/hypo reactivity to sensory input', screening:true},
+    {item_id:'MCHAT-Q15', assessment:'M-CHAT-R', domain:'Cognitive', question:'Does your child try to copy what you do?', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A1: Social-emotional reciprocity', screening:true},
+    {item_id:'MCHAT-Q16', assessment:'M-CHAT-R', domain:'Cognitive', question:'If you turn your head to look at something, does your child look around to see what you are looking at?', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A1: Social-emotional reciprocity', screening:true},
+    {item_id:'ISAA-1', assessment:'ISAA (ISA Tool)', domain:'Cognitive', question:'Does not respond to his/her own name', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A1: Social-emotional reciprocity', screening:false},
+    {item_id:'ISAA-3', assessment:'ISAA (ISA Tool)', domain:'Cognitive', question:'Shows aggressive behavior in public places', dsm5_subcategory:'Criterion B — Restricted & Repetitive Behaviors', dsm5_criterion:'B1: Stereotyped/repetitive movements or speech', screening:false},
+    {item_id:'ISAA-4', assessment:'ISAA (ISA Tool)', domain:'Cognitive', question:'Insists on sameness in environment', dsm5_subcategory:'Criterion B — Restricted & Repetitive Behaviors', dsm5_criterion:'B2: Insistence on sameness / routines', screening:false},
+    {item_id:'ISAA-10', assessment:'ISAA (ISA Tool)', domain:'Cognitive', question:'Unable to interpret facial expressions or body language', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A2: Nonverbal communication', screening:false},
+    {item_id:'ISAA-12', assessment:'ISAA (ISA Tool)', domain:'Cognitive', question:'Unable to understand/follow rules of games', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A3: Developing & maintaining relationships', screening:false},
+    {item_id:'ISAA-14', assessment:'ISAA (ISA Tool)', domain:'Language', question:'Refers to self by name', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A3: Developing & maintaining relationships', screening:false},
+    {item_id:'ISAA-17', assessment:'ISAA (ISA Tool)', domain:'Language', question:'Has limited or no understanding of spoken language', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A1: Social-emotional reciprocity', screening:false},
+    {item_id:'ISAA-20', assessment:'ISAA (ISA Tool)', domain:'Cognitive', question:'Has unusual attachment to objects', dsm5_subcategory:'Criterion B — Restricted & Repetitive Behaviors', dsm5_criterion:'B3: Highly fixated interests', screening:false},
+    {item_id:'INDT-Q21', assessment:'INDT-ASD', domain:'Cognitive', question:'(Age ≥ 6) Does the child understand jokes or teasing?', dsm5_subcategory:'Criterion A — Social Communication Deficits', dsm5_criterion:'A1: Social-emotional reciprocity', screening:false},
+  ],
+  'ADHD — Attention Deficit Hyperactivity Disorder': [
+    {item_id:'ADHD-1', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Fails to give close attention to details or makes careless mistakes', dsm5_subcategory:'Criterion A1 — Inattention', dsm5_criterion:'A1: Inattention symptoms', screening:false},
+    {item_id:'ADHD-2', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Has difficulty sustaining attention in tasks or play activities', dsm5_subcategory:'Criterion A1 — Inattention', dsm5_criterion:'A1: Inattention symptoms', screening:false},
+    {item_id:'ADHD-3', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Does not seem to listen when spoken to directly', dsm5_subcategory:'Criterion A1 — Inattention', dsm5_criterion:'A1: Inattention symptoms', screening:false},
+    {item_id:'ADHD-4', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Does not follow through on instructions and fails to finish work', dsm5_subcategory:'Criterion A1 — Inattention', dsm5_criterion:'A1: Inattention symptoms', screening:false},
+    {item_id:'ADHD-5', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Has difficulty organizing tasks and activities', dsm5_subcategory:'Criterion A1 — Inattention', dsm5_criterion:'A1: Inattention symptoms', screening:false},
+    {item_id:'ADHD-8', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Is easily distracted by outside stimuli', dsm5_subcategory:'Criterion A1 — Inattention', dsm5_criterion:'A1: Inattention symptoms', screening:false},
+    {item_id:'ADHD-10', assessment:'ADHD Rating Scale', domain:'Motor', question:'Fidgets with hands or feet or squirms in seat', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-11', assessment:'ADHD Rating Scale', domain:'Motor', question:'Leaves seat when remaining seated is expected', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-12', assessment:'ADHD Rating Scale', domain:'Motor', question:'Runs about or climbs excessively in inappropriate situations', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-13', assessment:'ADHD Rating Scale', domain:'Motor', question:'Has difficulty playing or engaging in leisure activities quietly', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-14', assessment:'ADHD Rating Scale', domain:'Motor', question:"Is 'on the go' or acts as if 'driven by a motor'", dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-15', assessment:'ADHD Rating Scale', domain:'Language', question:'Talks too much', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-16', assessment:'ADHD Rating Scale', domain:'Language', question:'Blurts out answers before questions have been completed', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-17', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Has difficulty waiting his/her turn', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-18', assessment:'ADHD Rating Scale', domain:'Language', question:'Interrupts or intrudes on others (e.g., conversations or games)', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Hyperactivity-impulsivity symptoms', screening:false},
+    {item_id:'ADHD-19', assessment:'ADHD Rating Scale', domain:'Language', question:'Argues with adults', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Oppositional/conduct symptoms', screening:false},
+    {item_id:'ADHD-22', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Is touchy or easily annoyed by others', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Oppositional/conduct symptoms', screening:false},
+    {item_id:'ADHD-23', assessment:'ADHD Rating Scale', domain:'Cognitive', question:'Is angry or resentful', dsm5_subcategory:'Criterion A2 — Hyperactivity/Impulsivity', dsm5_criterion:'A2: Oppositional/conduct symptoms', screening:false},
+  ],
+  'Anxiety Disorders': [
+    {item_id:'SCARED-1', assessment:'SCARED', domain:'Social', question:'When my child feels frightened, it is hard for him/her to breathe', dsm5_subcategory:'Panic Disorder', dsm5_criterion:'Panic attack symptoms', screening:false},
+    {item_id:'SCARED-2', assessment:'SCARED', domain:'Social', question:'My child gets headaches when he/she is at school', dsm5_subcategory:'School Avoidance / Separation Anxiety', dsm5_criterion:'School refusal / somatic complaints', screening:false},
+    {item_id:'SCARED-4', assessment:'SCARED', domain:'Social', question:'My child is nervous', dsm5_subcategory:'Generalized Anxiety Disorder (GAD)', dsm5_criterion:'Excessive worry symptoms', screening:false},
+    {item_id:'SCARED-5', assessment:'SCARED', domain:'Social', question:'My child does not like to be away from his/her family', dsm5_subcategory:'Separation Anxiety Disorder', dsm5_criterion:'Distress on separation', screening:false},
+    {item_id:'SCARED-6', assessment:'SCARED', domain:'Social', question:'My child is afraid of having a panic attack', dsm5_subcategory:'Panic Disorder', dsm5_criterion:'Panic attack symptoms', screening:false},
+    {item_id:'SCARED-7', assessment:'SCARED', domain:'Social', question:'My child does not like to be away from home', dsm5_subcategory:'Separation Anxiety Disorder', dsm5_criterion:'Distress on separation', screening:false},
+    {item_id:'SCARED-11', assessment:'SCARED', domain:'Social', question:'My child gets stomachaches at school', dsm5_subcategory:'School Avoidance / Separation Anxiety', dsm5_criterion:'School refusal / somatic complaints', screening:false},
+    {item_id:'SCARED-13', assessment:'SCARED', domain:'Social', question:"My child is a worrier", dsm5_subcategory:'Generalized Anxiety Disorder (GAD)', dsm5_criterion:'Excessive worry symptoms', screening:false},
+    {item_id:'SCARED-17', assessment:'SCARED', domain:'Social', question:'My child is afraid to go to school', dsm5_subcategory:'School Avoidance / Separation Anxiety', dsm5_criterion:'School refusal / somatic complaints', screening:false},
+    {item_id:'SCARED-18', assessment:'SCARED', domain:'Social', question:"When frightened, my child's heart beats fast", dsm5_subcategory:'Panic Disorder', dsm5_criterion:'Panic attack symptoms', screening:false},
+    {item_id:'SCARED-19', assessment:'SCARED', domain:'Social', question:'My child gets shaky', dsm5_subcategory:'Generalized Anxiety Disorder (GAD)', dsm5_criterion:'Anxiety symptoms', screening:false},
+    {item_id:'SCARED-22', assessment:'SCARED', domain:'Social', question:'My child has nightmares about something bad happening to his/her parents', dsm5_subcategory:'Separation Anxiety Disorder', dsm5_criterion:'Distress on separation', screening:false},
+    {item_id:'SCARED-24', assessment:'SCARED', domain:'Social', question:'My child is afraid to be alone at home', dsm5_subcategory:'Separation Anxiety Disorder', dsm5_criterion:'Distress on separation', screening:false},
+    {item_id:'SCARED-26', assessment:'SCARED', domain:'Social', question:"It is hard for my child to talk with people he/she doesn't know well", dsm5_subcategory:'Social Anxiety Disorder', dsm5_criterion:'Fear of negative evaluation', screening:false},
+    {item_id:'SCARED-29', assessment:'SCARED', domain:'Social', question:'My child is afraid of being in crowded places', dsm5_subcategory:'Social Anxiety Disorder', dsm5_criterion:'Fear of negative evaluation', screening:false},
+    {item_id:'SCARED-30', assessment:'SCARED', domain:'Motor', question:'My child is nervous', dsm5_subcategory:'Generalized Anxiety Disorder (GAD)', dsm5_criterion:'Anxiety symptoms', screening:false},
+    {item_id:'SCARED-31', assessment:'SCARED', domain:'Social', question:'My child has many worries', dsm5_subcategory:'Generalized Anxiety Disorder (GAD)', dsm5_criterion:'Excessive worry symptoms', screening:false},
+    {item_id:'SCARED-38', assessment:'SCARED', domain:'Social', question:"My child feels self-conscious around others", dsm5_subcategory:'Social Anxiety Disorder', dsm5_criterion:'Fear of negative evaluation', screening:false},
+  ],
+  'Intellectual Disability': [
+    {item_id:'BKT-1', assessment:'BKT', domain:'Cognitive', question:'Pointing to Body Parts – Show me your nose / eyes / mouth / hair', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Conceptual domain (reasoning, memory, problem solving)', screening:false},
+    {item_id:'BKT-2', assessment:'BKT', domain:'Cognitive', question:'Naming Familiar Objects – What is this? (Key, Coin, Knife, Watch, Pencil)', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Conceptual domain (reasoning, memory, problem solving)', screening:false},
+    {item_id:'BKT-3', assessment:'BKT', domain:'Cognitive', question:'Comprehension – What do you do when you are hungry / thirsty / sleepy / cold?', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Conceptual domain (reasoning, memory, problem solving)', screening:false},
+    {item_id:'BKT-4', assessment:'BKT', domain:'Cognitive', question:'Verbal Fluency – Name as many animals as you can in one minute', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Conceptual domain (reasoning, memory, problem solving)', screening:false},
+    {item_id:'BKT-5', assessment:'BKT', domain:'Cognitive', question:'Digit Span – Repeat these numbers forwards: 2-7-4', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Conceptual domain (reasoning, memory, problem solving)', screening:false},
+    {item_id:'BKT-6', assessment:'BKT', domain:'Language', question:'Sentence Repetition – Repeat this sentence: The dog ran fast', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Social domain (empathy, communication, relationships)', screening:false},
+    {item_id:'JP-SELF-1', assessment:'Jamaican Portage', domain:'Self-Help', question:'Drinks from cup with some spilling', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Practical domain (self-care, daily living, work skills)', screening:false},
+    {item_id:'JP-SELF-2', assessment:'Jamaican Portage', domain:'Self-Help', question:'Holds and drinks from cup independently', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Practical domain (self-care, daily living, work skills)', screening:false},
+    {item_id:'JP-SELF-3', assessment:'Jamaican Portage', domain:'Self-Help', question:'Uses spoon with little spilling', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Practical domain (self-care, daily living, work skills)', screening:false},
+    {item_id:'JP-SELF-4', assessment:'Jamaican Portage', domain:'Self-Help', question:'Removes coat or dress unaided', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Practical domain (self-care, daily living, work skills)', screening:false},
+    {item_id:'JP-SELF-5', assessment:'Jamaican Portage', domain:'Self-Help', question:'Pulls on simple clothes', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Practical domain (self-care, daily living, work skills)', screening:false},
+    {item_id:'JP-COG-1', assessment:'Jamaican Portage', domain:'Cognitive', question:'Looks at own hand', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Conceptual domain (reasoning, learning, problem solving)', screening:false},
+    {item_id:'JP-COG-2', assessment:'Jamaican Portage', domain:'Cognitive', question:'Reaches for and grasps small object', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Conceptual domain (reasoning, learning, problem solving)', screening:false},
+    {item_id:'JP-COG-3', assessment:'Jamaican Portage', domain:'Cognitive', question:'Uncovers hidden object', dsm5_subcategory:'Adaptive Functioning Deficits', dsm5_criterion:'Conceptual domain (reasoning, learning, problem solving)', screening:false},
+  ],
+  'Global Developmental Delay': [
+    {item_id:'DST-3M-1', assessment:'DST', domain:'Language', question:'Birth cry present', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'DST-3M-2', assessment:'DST', domain:'Motor', question:'Equal bilateral movements', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'Motor milestone delay', screening:true},
+    {item_id:'DST-3M-3', assessment:'DST', domain:'Language', question:'Responds to bell', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'DST-3M-4', assessment:'DST', domain:'Language', question:'Vocalises sounds', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'DST-3M-6', assessment:'DST', domain:'Cognitive', question:'Eyes follow moving object', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'Cognitive milestone delay', screening:true},
+    {item_id:'DST-6M-3', assessment:'DST', domain:'Cognitive', question:'Recognises mother', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'Cognitive milestone delay', screening:true},
+    {item_id:'DST-6M-4', assessment:'DST', domain:'Language', question:'Vocalises for pleasure/babbles', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'DST-1Y-3', assessment:'DST', domain:'Cognitive', question:'Follows simple instructions', dsm5_subcategory:'Toddler Milestones (1–2 years)', dsm5_criterion:'Cognitive milestone delay', screening:true},
+    {item_id:'DST-1Y-4', assessment:'DST', domain:'Social', question:'Cooperates for dressing', dsm5_subcategory:'Toddler Milestones (1–2 years)', dsm5_criterion:'Social milestone delay', screening:true},
+    {item_id:'DST-1Y-5', assessment:'DST', domain:'Language', question:'Says 2 words', dsm5_subcategory:'Toddler Milestones (1–2 years)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'DST-1Y-6', assessment:'DST', domain:'Cognitive', question:'Plays social games', dsm5_subcategory:'Toddler Milestones (1–2 years)', dsm5_criterion:'Cognitive milestone delay', screening:true},
+    {item_id:'DST-2Y-2', assessment:'DST', domain:'Language', question:'Follows 2-step commands', dsm5_subcategory:'Toddler Milestones (1–2 years)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'DST-2Y-3', assessment:'DST', domain:'Language', question:'Says 10+ words', dsm5_subcategory:'Toddler Milestones (1–2 years)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'DST-3Y-1', assessment:'DST', domain:'Cognitive', question:'Copies O', dsm5_subcategory:'Preschool Milestones (3–5 years)', dsm5_criterion:'Cognitive milestone delay', screening:true},
+    {item_id:'DST-3Y-2', assessment:'DST', domain:'Language', question:'Uses plurals', dsm5_subcategory:'Preschool Milestones (3–5 years)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'DST-3Y-5', assessment:'DST', domain:'Language', question:'Tells first and last name', dsm5_subcategory:'Preschool Milestones (3–5 years)', dsm5_criterion:'Communication milestone delay', screening:true},
+    {item_id:'JP-SOC-1', assessment:'Jamaican Portage', domain:'Social', question:'Smiles at familiar person', dsm5_subcategory:'Social-Emotional Development', dsm5_criterion:'Social milestone delay', screening:false},
+    {item_id:'JP-SOC-2', assessment:'Jamaican Portage', domain:'Social', question:'Shows awareness of strangers', dsm5_subcategory:'Social-Emotional Development', dsm5_criterion:'Social milestone delay', screening:false},
+    {item_id:'JP-INF-1', assessment:'Jamaican Portage', domain:'Infant Stimulation', question:'Responds to voice', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'General developmental milestone', screening:false},
+    {item_id:'JP-INF-2', assessment:'Jamaican Portage', domain:'Infant Stimulation', question:'Turns head to sound', dsm5_subcategory:'Early Developmental Milestones (0–12 months)', dsm5_criterion:'General developmental milestone', screening:false},
+  ],
+  'Motor Disorders — Developmental Coordination Disorder': [
+    {item_id:'JP-MOT-1', assessment:'Jamaican Portage', domain:'Motor', question:'Lifts head when lying on stomach', dsm5_subcategory:'Early Motor Development (0–2 years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-2', assessment:'Jamaican Portage', domain:'Motor', question:'Lifts head and chest when lying on stomach', dsm5_subcategory:'Early Motor Development (0–2 years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-5', assessment:'Jamaican Portage', domain:'Motor', question:'Sits with support', dsm5_subcategory:'Early Motor Development (0–2 years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-10', assessment:'Jamaican Portage', domain:'Motor', question:'Pulls self to standing', dsm5_subcategory:'Early Motor Development (0–2 years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-38', assessment:'Jamaican Portage', domain:'Motor', question:'Walks up stairs with both feet on each step', dsm5_subcategory:'Motor Skill Acquisition (2+ years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-39', assessment:'Jamaican Portage', domain:'Motor', question:'Walks down stairs with both feet on each step', dsm5_subcategory:'Motor Skill Acquisition (2+ years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-45', assessment:'Jamaican Portage', domain:'Motor', question:'Catches ball with both arms extended', dsm5_subcategory:'Motor Skill Acquisition (2+ years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-50', assessment:'Jamaican Portage', domain:'Motor', question:'Copies circle with pencil', dsm5_subcategory:'Motor Skill Acquisition (2+ years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-60', assessment:'Jamaican Portage', domain:'Motor', question:'Skips using alternate feet', dsm5_subcategory:'Motor Skill Acquisition (2+ years)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-89', assessment:'Jamaican Portage', domain:'Motor', question:'Can swim', dsm5_subcategory:'Gross & Fine Motor Skills (Adolescent)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'JP-MOT-90', assessment:'Jamaican Portage', domain:'Motor', question:'Can dance', dsm5_subcategory:'Gross & Fine Motor Skills (Adolescent)', dsm5_criterion:'Motor coordination below expected level', screening:false},
+    {item_id:'DST-3M-2', assessment:'DST', domain:'Motor', question:'Equal bilateral movements', dsm5_subcategory:'Early Motor Development (0–2 years)', dsm5_criterion:'Motor coordination below expected level', screening:true},
+    {item_id:'DST-6M-5', assessment:'DST', domain:'Motor', question:'Carries objects to mouth', dsm5_subcategory:'Early Motor Development (0–2 years)', dsm5_criterion:'Motor coordination below expected level', screening:true},
+  ],
+  'Communication Disorders': [
+    {item_id:'JP-LANG-1', assessment:'Jamaican Portage', domain:'Language', question:'Repeats sound made by others', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:false},
+    {item_id:'JP-LANG-2', assessment:'Jamaican Portage', domain:'Language', question:'Repeats same syllable 2-3 times (ma, ma, ma)', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:false},
+    {item_id:'JP-LANG-5', assessment:'Jamaican Portage', domain:'Language', question:'Uses 2-word combinations', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:false},
+    {item_id:'JP-LANG-8', assessment:'Jamaican Portage', domain:'Language', question:'Uses 3-word sentences', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:false},
+    {item_id:'JP-LANG-14', assessment:'Jamaican Portage', domain:'Language', question:'Follows three one-step directions without gestures', dsm5_subcategory:'Language Disorder — Receptive', dsm5_criterion:'Reduced ability to understand language', screening:false},
+    {item_id:'JP-LANG-20', assessment:'Jamaican Portage', domain:'Language', question:'Names pictures in a book when asked', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:false},
+    {item_id:'JP-LANG-30', assessment:'Jamaican Portage', domain:'Language', question:'Tells simple story using 4-5 sentences', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:false},
+    {item_id:'JP-LANG-34', assessment:'Jamaican Portage', domain:'Language', question:"Uses 'no' or 'not' in speech", dsm5_subcategory:'Speech Sound Disorder', dsm5_criterion:'Persistent difficulty with speech production', screening:false},
+    {item_id:'JP-LANG-50', assessment:'Jamaican Portage', domain:'Language', question:'Uses irregular past tense correctly', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:false},
+    {item_id:'JP-LANG-60', assessment:'Jamaican Portage', domain:'Language', question:'Asks and answers "why" questions', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:false},
+    {item_id:'JP-LANG-72', assessment:'Jamaican Portage', domain:'Language', question:'Understands passive sentences', dsm5_subcategory:'Language Disorder — Receptive', dsm5_criterion:'Reduced ability to understand language', screening:false},
+    {item_id:'DST-1.5Y-1', assessment:'DST', domain:'Language', question:'Says a few words', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:true},
+    {item_id:'DST-1.5Y-3', assessment:'DST', domain:'Language', question:'Indicates wants', dsm5_subcategory:'Language Disorder — Expressive', dsm5_criterion:'Reduced vocabulary / sentence structure', screening:true},
+  ],
+};
+
+const DC = {'Cognitive':'#1d3557','Motor':'#2d6a4f','Language':'#7b2d8b','Social':'#c84b2f','Infant Stimulation':'#b45309','Self-Help':'#0e7490'};
+
+let activeCat = CATEGORIES[0].key;
+let activeSubcat = null;
+let activeCriterion = null;
+let searchTerm = '';
+let showScreeningOnly = false;
+
+// ── BUILD TABS ──
+const catNav = document.getElementById('catNav');
+CATEGORIES.forEach(cat => {
+  const tab = document.createElement('div');
+  tab.className = `cat-tab ${cat.key === activeCat ? 'active' : ''}`;
+  tab.style.color = cat.color;
+  tab.innerHTML = `${cat.icon} ${cat.label} <span class="count" style="background:${cat.light};color:${cat.color}">${cat.count}</span>`;
+  tab.onclick = () => selectCat(cat.key);
+  catNav.appendChild(tab);
+});
+
+// ── STATS ──
+const statsStrip = document.getElementById('statsStrip');
+CATEGORIES.forEach(cat => {
+  statsStrip.innerHTML += `<div class="stat"><div class="stat-n" style="color:${cat.color}">${cat.count}</div><div class="stat-l">${cat.label}</div></div>`;
+});
+
+// ── SELECT CATEGORY ──
+function selectCat(key) {
+  activeCat = key;
+  activeSubcat = null;
+  activeCriterion = null;
+  document.querySelectorAll('.cat-tab').forEach((t,i) => {
+    t.classList.toggle('active', CATEGORIES[i].key === key);
+  });
+  renderSidebar();
+  renderContent();
+}
+
+// ── SIDEBAR ──
+function renderSidebar() {
+  const cat = CATEGORIES.find(c => c.key === activeCat);
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = '';
+  cat.subcategories.forEach(sub => {
+    const sec = document.createElement('div');
+    sec.className = 'sb-section';
+    sec.innerHTML = `<div class="sb-section-hdr" style="color:${cat.color}">
+      <span style="width:8px;height:8px;border-radius:50%;background:${cat.color};flex-shrink:0;display:inline-block"></span>
+      ${sub.name}
+    </div>`;
+    sub.criteria.forEach(crit => {
+      const count = (QUESTIONS_BY_CAT[cat.full] || []).filter(q =>
+        q.dsm5_subcategory === sub.name && q.dsm5_criterion === crit).length;
+      if (count === 0) return;
+      const row = document.createElement('div');
+      row.className = `sb-criterion ${activeCriterion === crit ? 'active' : ''}`;
+      row.style.borderLeftColor = activeCriterion === crit ? cat.color : 'transparent';
+      row.innerHTML = `${crit} <span class="sb-count">${count}</span>`;
+      row.onclick = () => {
+        activeCriterion = activeCriterion === crit ? null : crit;
+        activeSubcat = sub.name;
+        renderSidebar(); renderContent();
+      };
+      sec.appendChild(row);
+    });
+    sb.appendChild(sec);
+  });
+}
+
+// ── CONTENT ──
+function renderContent() {
+  const cat = CATEGORIES.find(c => c.key === activeCat);
+  const allQ = QUESTIONS_BY_CAT[cat.full] || [];
+
+  let filtered = allQ.filter(q => {
+    const matchSearch = !searchTerm ||
+      q.question.toLowerCase().includes(searchTerm) ||
+      q.item_id.toLowerCase().includes(searchTerm) ||
+      q.dsm5_criterion.toLowerCase().includes(searchTerm);
+    const matchScreen = !showScreeningOnly || q.screening;
+    const matchCrit = !activeCriterion || q.dsm5_criterion === activeCriterion;
+    return matchSearch && matchScreen && matchCrit;
+  });
+
+  document.getElementById('countLabel').textContent = `${filtered.length} questions`;
+
+  // Build filter pills
+  const filterRow = document.getElementById('filterRow');
+  filterRow.innerHTML = `
+    <button class="fpill ${!activeCriterion ? 'on' : ''}" onclick="clearFilter()">All Criteria</button>
+    <button class="fpill ${showScreeningOnly ? 'on' : ''}" onclick="toggleScreening()" style="${showScreeningOnly?'':''}">Screening Only</button>
+  `;
+
+  // Category header
+  let html = `<div class="category-header" style="background:${cat.light};border-color:${cat.mid}">
+    <div class="cat-icon">${cat.icon}</div>
+    <div class="cat-meta">
+      <div class="dsm-code" style="color:${cat.color}">${cat.code}</div>
+      <div class="cat-title" style="color:${cat.color}">${cat.full}</div>
+      <div class="cat-desc">${cat.desc}</div>
+      <div class="cat-stats">
+        <div class="cstat"><strong style="color:${cat.color}">${cat.count}</strong> total items</div>
+        <div class="cstat"><strong style="color:${cat.color}">${allQ.filter(q=>q.screening).length}</strong> screening items</div>
+        <div class="cstat"><strong style="color:${cat.color}">${[...new Set(allQ.map(q=>q.assessment))].length}</strong> assessment tools</div>
+        <div class="cstat"><strong style="color:${cat.color}">${[...new Set(allQ.map(q=>q.domain))].length}</strong> domains</div>
+      </div>
+    </div>
+  </div>`;
+
+  if (filtered.length === 0) {
+    html += `<div class="empty"><div style="font-size:32px;margin-bottom:12px">🔍</div><p>No questions match your filter</p></div>`;
+    document.getElementById('questionArea').innerHTML = html;
+    return;
+  }
+
+  // Group by subcategory
+  const bySub = {};
+  filtered.forEach(q => {
+    const key = q.dsm5_subcategory;
+    if (!bySub[key]) bySub[key] = {};
+    if (!bySub[key][q.dsm5_criterion]) bySub[key][q.dsm5_criterion] = [];
+    bySub[key][q.dsm5_criterion].push(q);
+  });
+
+  Object.entries(bySub).forEach(([subName, criteria]) => {
+    const total = Object.values(criteria).flat().length;
+    html += `<div class="subcategory">
+      <div class="sub-hdr">
+        <div class="sub-dot" style="background:${cat.color}"></div>
+        <div class="sub-title">${subName}</div>
+        <div class="sub-criterion">${total} items</div>
+      </div>`;
+
+    Object.entries(criteria).forEach(([crit, qs]) => {
+      html += `<div style="margin-bottom:20px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:${cat.color};letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;padding:6px 12px;background:${cat.light};border-radius:4px;display:inline-block">${crit}</div>
+        <div class="q-grid">`;
+      qs.forEach(q => {
+        html += `<div class="q-card" style="border-left:3px solid ${cat.color}22">
+          <div class="q-top">
+            <span class="q-id">${q.item_id}</span>
+            ${q.screening ? '<span class="q-screen">SCREENING</span>' : ''}
+            <span class="q-domain" style="background:${DC[q.domain] || '#888'}22;color:${DC[q.domain] || '#888'}">${q.domain}</span>
+          </div>
+          <div class="q-text">${q.question}</div>
+          <div class="q-assess">${q.assessment}</div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  });
+
+  document.getElementById('questionArea').innerHTML = html;
+}
+
+function clearFilter() { activeCriterion = null; activeSubcat = null; renderSidebar(); renderContent(); }
+function toggleScreening() { showScreeningOnly = !showScreeningOnly; renderContent(); }
+
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchTerm = this.value.toLowerCase();
+  renderContent();
+});
+
+// INIT
+renderSidebar();
+renderContent();
+</script>
+</body>
+</html>
